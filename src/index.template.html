@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Statics Lab</title>
+<style>
+/*FONTS*/
+</style>
+<style>
+/*CSS*/
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Statics Lab</h1>
+    <div class="tabs" role="tablist" aria-label="Diagram">
+      <button class="tab" role="tab" data-q="M" id="tab-M"><i>M</i>Moment</button>
+      <button class="tab" role="tab" data-q="V" id="tab-V"><i>V</i>Shear</button>
+      <button class="tab" role="tab" data-q="N" id="tab-N"><i>N</i>Axial</button>
+      <button class="tab" role="tab" data-q="D" id="tab-D"><i>w</i>Deflection</button>
+    </div>
+    <div class="tools">
+      <button class="btn main" id="loads" title="Add a point load, or set the distributed load of a member">Loads</button>
+      <label for="sec">Section <select id="sec"></select></label>
+      <span class="ei" id="ei"></span>
+      <button class="btn" id="vals" aria-pressed="true">Values</button>
+      <button class="btn" id="cmp" aria-pressed="false" title="Keep the present lines as dashed outlines while you change the structure">Compare</button>
+      <button class="btn" id="v3d" aria-pressed="false" title="The structure as a body beside the sheet: profiles, bent shape, stresses">3D</button>
+      <button class="btn" id="undo" disabled>Undo</button>
+      <button class="btn" id="reset">Reset</button>
+      <button class="btn" id="theme" aria-pressed="false" title="Dark sheet or light sheet">Dark</button>
+    </div>
+  </header>
+  <nav class="rail" id="rail" aria-label="Structures"></nav>
+  <main class="stage" id="stage">
+    <canvas id="cv" aria-label="Structure with its diagrams"></canvas>
+    <div class="pop" id="pop" hidden></div>
+    <div class="foot"><span id="hint"></span><span id="mag"></span></div>
+  </main>
+  <div class="side">
+    <div class="v3" id="v3"><canvas id="cv3" aria-label="The structure in 3D"></canvas><canvas id="cv3t"></canvas><button class="btn" id="v3x" hidden title="Close the cut of the member">Close the cut</button></div>
+    <aside class="learn" id="learn" aria-live="off"></aside>
+    <details class="secw" id="secw"></details>
+  </div>
+</div>
+<script>
+{
+/*JS*/
+}
+</script>
+</body>
+</html>

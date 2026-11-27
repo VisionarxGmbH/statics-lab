@@ -1,0 +1,185 @@
+/* VOICE   a working instrument for an engineer: exact, quiet, quick to read
+   IDEA    the squared calculation pad: structure in ink, hatched state lines, hand formulas in the margin
+   PICTURE the structure with its live moment, shear, axial and deflection lines
+   COLOUR  white paper, ink, violet moment, teal shear, rose and blue axial, orange forces
+   TYPE    Geist for the sheet, STIX Two Text for the formulas
+   LAYOUT  structures on the left, the sheet in the middle, formulas on the right; phone: title, sheet, formulas */
+:root{color-scheme:light dark;
+--bg:light-dark(#fff,#0f1317);--panel:light-dark(#f2f4f6,#171c22);--ink:light-dark(#131820,#e9edf3);--mute:light-dark(#566170,#9aa4b2);
+--line:light-dark(#d9dde4,#2a323d);--grid:light-dark(#eef1f5,#161b22);--grid2:light-dark(#dfe4eb,#202831);
+--load:light-dark(#e2560b,#ff9a4d);--cM:light-dark(#6741d9,#a898ff);--cV:light-dark(#0a8f83,#38d3c0);--cT:light-dark(#d6336c,#ff7a9e);--cC:light-dark(#1b6fdc,#69aeff);
+--ok:light-dark(#237a36,#57d16c);--amb:light-dark(#a35400,#ffb454);--bad:light-dark(#c42525,#ff7070)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Geist,"Segoe UI",system-ui,sans-serif;overflow:hidden}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--load);outline-offset:2px}
+.app{height:100%;display:grid;grid-template:auto minmax(0,1fr)/214px minmax(0,1fr) 356px;grid-template-areas:"top top top" "rail stage learn"}
+
+header{grid-area:top;display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;padding:10px 16px;border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{--c:var(--ink);display:flex;align-items:baseline;gap:7px;height:40px;padding:0 14px 0 12px;border:1.5px solid var(--c);border-radius:10px;background:none;color:var(--c);font-weight:600;line-height:37px}
+.tab i{font:italic 500 21px "STIX Two Text",Cambria,"Times New Roman",serif}
+.tab[data-q=M]{--c:var(--cM)}.tab[data-q=V]{--c:var(--cV)}.tab[data-q=N]{--c:var(--cT)}
+.tab:hover{background:color-mix(in srgb,var(--c) 10%,transparent)}
+.tab[aria-selected=true]{background:var(--c);color:var(--bg)}
+.tab[data-q=N][aria-selected=true]{background:linear-gradient(100deg,var(--cT) 0 50%,var(--cC) 50% 100%);border-color:transparent}
+.tools{margin-left:auto;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.tools label{display:flex;align-items:center;gap:7px;color:var(--mute)}
+select,.btn{height:36px;border:1.5px solid var(--line);border-radius:9px;background:var(--bg);padding:0 12px}
+select{padding-right:8px}
+.btn:hover,select:hover{border-color:var(--ink)}
+.btn[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn:disabled{opacity:.4;cursor:default;border-color:var(--line)}
+.btn.main{border-color:var(--ink);font-weight:600}
+.ei{color:var(--mute);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* with the button "3D" the row of the header is longer: below 1500 px its gaps and the sides of its buttons are a
+   little narrower, and below 1460 px the word "Section" before the list of sections goes. So the header keeps one row
+   down to 1340 px, whatever the example and the tab */
+@media(max-width:1499px){header{gap:10px 13px}.tools{gap:6px}.tools .btn{padding:0 10px}.tools select{padding-left:10px}}
+@media(max-width:1459px){.tools label{font-size:0;gap:0}.tools label select{font-size:15px}}
+/* narrower than that the buttons take the second row in every state, so that the sheet does not jump when an example with a longer tab is picked */
+@media(min-width:761px) and (max-width:1339px){.tools{flex-basis:100%;justify-content:flex-end}}
+
+.rail{grid-area:rail;overflow:auto;padding:6px 10px 16px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
+.rail h2{margin:8px 6px 1px;font-size:13px;font-weight:600;color:var(--mute)}
+.pre{flex:none;display:grid;grid-template-columns:62px minmax(0,1fr);align-items:center;gap:0 9px;padding:4px 8px;border:1.5px solid transparent;border-radius:10px;background:none;text-align:left}
+.pre svg{grid-row:1/span 2;display:block;width:62px;height:30px;color:var(--ink)}
+.pre b{align-self:end;font-size:14px;font-weight:600;line-height:1.2}
+.pre span{align-self:start;font-size:13px;color:var(--mute);line-height:1.25}
+.pre:hover{background:var(--panel)}
+.pre[aria-current=true]{border-color:var(--ink);background:var(--panel)}
+
+.stage{grid-area:stage;position:relative;min-height:0;overflow:hidden}
+canvas{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none}
+.foot{position:absolute;left:14px;right:14px;bottom:7px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 16px;font-size:13px;color:var(--mute);pointer-events:none}
+.foot span:last-child{white-space:nowrap;text-align:right}
+.pop{position:absolute;z-index:3;width:232px;display:grid;gap:9px;padding:12px;border:1.5px solid var(--ink);border-radius:12px;background:var(--bg);box-shadow:0 5px 16px rgb(0 0 0/.16)}
+.pop[hidden]{display:none}
+.pop.mem{width:282px}
+.pop.noq .q{opacity:.5}
+.pop small{color:var(--mute);font-size:12.5px;line-height:1.3;margin-top:-3px}
+.pop input.bad{border-color:var(--bad)}.pop small.lim{color:var(--bad)}.pop small.lim.soft{color:var(--mute)}
+.ph{display:flex;align-items:baseline;gap:8px}
+.ph b{font-weight:600}.ph span{color:var(--mute)}.ph b,.ph span{flex:none;white-space:nowrap}
+.ph button{width:28px;height:28px;border:0;border-radius:7px;background:none;font-size:20px;line-height:1}
+.ph button:first-of-type{margin-left:auto}
+.ph button:hover{background:var(--panel)}
+.pop label{display:grid;grid-template-columns:1fr 84px 38px;align-items:center;gap:6px}
+.pop label.chk{grid-template-columns:auto 1fr;gap:9px}
+.pop input[type=number]{height:36px;width:100%;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);padding:0 8px;font-size:16px;font-variant-numeric:tabular-nums}
+.pop input[type=checkbox]{width:18px;height:18px;accent-color:var(--load)}
+.pop label span{color:var(--mute)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1.5px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{height:36px;border:0;border-left:1.5px solid var(--line);background:none;font-size:16px}
+.seg button:first-child{border-left:0}
+.seg button:hover{background:var(--panel)}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.seg.txt button,.seg button[data-shape=none]{font-size:14px;padding:0 2px}
+.seg svg{display:block;margin:auto}
+.wide{min-height:38px;padding:6px 10px;line-height:1.25;border:1.5px solid var(--ink);border-radius:9px;background:none;font-weight:600}
+.wide:hover{background:var(--panel)}
+.wide.del{border-color:var(--line);font-weight:400;color:var(--bad)}
+
+.side{grid-area:learn;min-height:0;display:flex;flex-direction:column;border-left:1px solid var(--line)}
+/* the 3D view: beside the sheet, in the place of the cards; the column is wider while it is open */
+.v3{display:none;position:relative;flex:1 1 auto;min-height:0;background:var(--bg);overflow:hidden}
+.v3 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#cv3{cursor:grab}#cv3:active{cursor:grabbing}#cv3t{pointer-events:none}
+.v3 .btn{position:absolute;right:10px;top:52px;height:30px;padding:0 10px;font-size:13px;background:var(--bg)}
+.v3[data-msg]::after{content:attr(data-msg);position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;color:var(--mute)}
+.app[data-v3]{grid-template-columns:214px minmax(0,1fr) clamp(380px,min(40vw,100vw - 854px),780px)}
+.app[data-v3] .v3{display:block}.app[data-v3] .learn{display:none}
+.learn{flex:1 1 auto;min-height:0;overflow:auto;padding:16px 16px 30px;display:flex;flex-direction:column;gap:18px}
+.learn h2{margin:0;font-size:22px;line-height:1.12;letter-spacing:-.015em}
+.learn .sub{color:var(--mute)}
+.badge{--c:var(--ok);display:grid;gap:3px;padding:10px 12px 11px;border-radius:10px;background:color-mix(in srgb,var(--c) 13%,var(--bg))}
+.badge b{color:var(--c);font-weight:700}
+.badge.ind{--c:var(--amb)}.badge.bad{--c:var(--bad)}
+.badge .m{font-size:14px;font-variant-numeric:tabular-nums}
+.badge small{font-size:13px;color:var(--mute)}
+.card h3{margin:0 0 3px;font-size:14px;font-weight:600}
+.card p{margin:0 0 4px;color:var(--mute);font-size:14px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:1px 10px;padding:7px 0;border-top:1px solid var(--line)}
+.f,.rule b,.badge i,.eq i{font-family:"STIX Two Text",Cambria,"Times New Roman",serif}
+.f{font-size:18px;line-height:1.25;overflow-wrap:anywhere}
+.f sub,.f sup{font-size:.68em;line-height:0}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 2px;font-size:.92em;line-height:1.18}
+.fr>span:first-child{border-bottom:1.2px solid currentColor;padding:0 3px 1px}
+.fr>span:last-child{padding:1px 3px 0}
+.rt{border-top:1.2px solid currentColor;padding:0 2px 0 1px}
+.v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.v .ok{color:var(--ok);margin-left:6px}
+.v .no{display:block;font-weight:400;font-size:13px;color:var(--mute)}
+.s{grid-column:1/-1;font-size:13.5px;color:var(--mute);font-variant-numeric:tabular-nums}
+.note{margin:6px 0 0;font-size:13.5px;color:var(--mute)}
+.eq{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.eq th{font-weight:400;font-size:13px;color:var(--mute);text-align:right;padding:0 0 3px}
+.eq td{padding:5px 0;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
+.eq td:first-child{text-align:left;font-size:17px}
+.eq td:last-child{color:var(--mute);width:74px}
+.eq .ok{color:var(--ok);margin-left:6px}
+.rule{display:grid;grid-template-columns:104px minmax(0,1fr);gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)}
+.rule b{font-weight:400;font-size:17px;white-space:nowrap}
+.rule span{font-size:14px}
+.card.q h3{color:var(--c)}
+.signs summary{display:flex;align-items:baseline;gap:8px;list-style:none;cursor:pointer;border-radius:6px}
+.signs summary::-webkit-details-marker{display:none}
+.signs summary h3{margin:0;white-space:nowrap}
+.signs summary span{font-size:14px;color:var(--mute)}
+.signs summary::after{content:"";flex:none;align-self:center;margin-left:auto;width:8px;height:8px;border:solid var(--mute);border-width:0 1.6px 1.6px 0;transform:translateY(-2px) rotate(45deg)}
+.signs[open] summary::after{transform:translateY(2px) rotate(225deg)}
+.signs[open] summary{margin-bottom:4px}
+.signs[open] summary span{display:none}
+.sgs{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;padding-top:9px;border-top:1px solid var(--line)}
+.sg svg{display:block;width:96px;height:46px}
+.sg p{margin:1px 0 0;font-size:13.5px;line-height:1.35;color:var(--ink)}
+.signs .note{margin-top:9px}
+.sg b{margin-right:6px;font:400 17px "STIX Two Text",Cambria,"Times New Roman",serif;white-space:nowrap}
+.secw{flex:none;border-top:1.5px solid var(--ink);background:var(--bg);font-size:13.5px}
+.secw summary{display:flex;align-items:baseline;gap:8px;padding:8px 16px;list-style:none;cursor:pointer}
+.secw summary::-webkit-details-marker{display:none}
+.secw summary b{flex:none;font-size:15px;font-weight:600;white-space:nowrap}
+.secw summary span{color:var(--mute);font-size:13px;line-height:1.25}
+.secw summary::after{content:"";flex:none;align-self:center;margin-left:auto;width:8px;height:8px;border:solid var(--mute);border-width:0 1.6px 1.6px 0;transform:translateY(2px) rotate(225deg)}
+.secw[open] summary::after{transform:translateY(-2px) rotate(45deg)}
+.sb{display:grid;grid-template-columns:128px minmax(0,1fr);align-items:center;gap:0 8px;padding:0 16px 0 6px}
+.sb svg{display:block;width:128px;height:112px;color:var(--mute)}
+.sb dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:0 10px;line-height:1.42;font-variant-numeric:tabular-nums}
+.secw sup,.secw sub{font-size:.72em;line-height:0}
+.sb dt{color:var(--mute);white-space:nowrap}.sb dd{margin:0;text-align:right;white-space:nowrap;font-weight:600}
+.sb dt i,.secw small i{font-family:"STIX Two Text",Cambria,"Times New Roman",serif;font-size:1.12em}
+.secw small{display:block;padding:4px 16px 9px;color:var(--mute);font-size:12.5px;line-height:1.3}
+.pop label.sel{grid-template-columns:minmax(0,1fr);gap:4px}
+.pop select{width:100%;min-width:0}
+.scope{padding-top:8px;border-top:1px solid var(--line)}
+.try{margin:0;padding:0;list-style:none}
+.try li{padding:6px 0;border-top:1px solid var(--line);font-size:14px}
+
+@media(max-width:1180px){
+.app{grid-template:auto auto minmax(0,1fr)/minmax(0,1fr) 326px;grid-template-areas:"top top" "rail rail" "stage learn"}
+.app[data-v3]{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+.rail{flex-direction:row;gap:4px;padding:6px 12px;border-right:0;border-bottom:1px solid var(--line)}
+.rail h2{display:none}.pre{width:auto;max-width:214px}
+}
+@media(max-width:760px){
+html,body{height:auto}body{overflow:auto}
+.app{height:auto;grid-template:auto auto auto auto auto/minmax(0,1fr);grid-template-areas:"top" "rail" "stage" "sec" "learn"}
+.side{display:contents}.learn{grid-area:learn}.secw{grid-area:sec;border-top:1px solid var(--line)}
+.app[data-v3]{grid-template:auto auto auto auto auto auto/minmax(0,1fr);grid-template-areas:"top" "rail" "stage" "v3" "sec" "learn"}
+.v3{grid-area:v3;height:min(70svh,540px);border-top:1px solid var(--line)}.app[data-v3] .learn{display:block}
+.stage{height:min(80svh,680px);min-height:500px}
+canvas{touch-action:pan-y}
+.learn{overflow:visible;border-top:1px solid var(--line)}
+.tools{margin-left:0}.ei{display:none}
+.tab{height:38px;padding:0 11px 0 10px;line-height:35px}
+}
+@media(max-width:480px){
+header{padding:10px 12px;gap:8px 10px}
+.tabs{gap:5px;flex-wrap:nowrap}.tab{gap:5px;padding:0 8px 0 7px;font-size:14px}.tab i{font-size:19px}
+.tools{gap:6px;width:100%}.tools label{font-size:0;gap:0}select,.btn{padding:0 10px}select{font-size:15px}
+}
+.nb{white-space:nowrap}
