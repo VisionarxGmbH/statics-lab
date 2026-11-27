@@ -1211,6 +1211,28 @@ with sync_playwright() as p:
     ok(bd and len(sg) == 2 and sg[1][0] + 8 <= bd[1] and sg[1][0] - sg[0][0] >= 17, f'a column of the portal cut at its middle: the body stands on the cut face, and the two words stand above it, one over the other: body {bd}, words {z["wrote"]}')
     pg.mouse.move(5, 5); pg.click('#v3d'); pg.wait_for_timeout(300)
     pre('simple-p', 'L.st.sec = 2', 'M')
+    TAG = '[version 20] '
+    # --- the body of the stress at the cut keeps one size (version 20): along the member and while a load changes only its
+    # numbers change; the framing of the cut view stays the same, also near the start of the member and where there is no stress
+    same_ = lambda a, b: a and b and all(abs(x - y) <= 0.5 for x, y in zip(a, b))
+    def cut_(xm, wait=700):
+        g = J("(x) => { const c = document.querySelector('#cv').getBoundingClientRect(), V = __lab.VW; return [c.x + V.ox + x * V.s, c.y + V.yB + 150]; }", xm)
+        pg.mouse.move(g[0], g[1]); pg.wait_for_timeout(wait); z = J(V3S); return z['body'], [w[0] for w in (z['wrote'] or [])], z
+    pg.mouse.move(5, 5); pre('simple-w', 'L.st.sec = 2', 'M'); pg.click('#v3d'); pg.wait_for_timeout(900)
+    b1, w1, _ = cut_(2.0); b2, w2, _ = cut_(0.3); b3, w3, _ = cut_(4.5)
+    ok(same_(b1, b2) and same_(b1, b3) and 'σ = −71.8 N/mm², compression' in w1 and 'σ = −15.3 N/mm², compression' in w2 and 'σ = −60.6 N/mm², compression' in w3,
+       f'simple beam under 10 kN/m cut at 2.00 m, at 0.30 m and at 4.50 m: the body of the stress has the same size and place in the view of the cut, and its numbers are −71.8, −15.3 and −60.6 N/mm²: {b1} {b2} {b3} {w2} {w3}')
+    b0, w0, _ = cut_(0.0)
+    ok(b0 is None and w0 == ['σ = 0.0 N/mm²'], f'the cut at the support, where the moment is zero: no body, and the stress is written as 0.0: {b0} {w0}')
+    cut_(2.0); pg.mouse.move(5, 5); pg.wait_for_timeout(300)
+    J("() => { const L = __lab, u = L.st.model.members[0].udl; u.w1 = u.w2 = 20; L.resolve(); }"); pg.wait_for_timeout(110); zm = J(V3S); pg.wait_for_timeout(900); ze = J(V3S)
+    ok(zm['cut'] and same_(b1, zm['body']) and same_(b1, ze['body']) and 'σ = −143.6 N/mm², compression' in [w[0] for w in ze['wrote']],
+       f'the load is doubled while the cut stays at 2.00 m: the body keeps its size while the sheet moves to the new state and after it, and its number becomes −143.6 N/mm²: {zm["body"]} {ze["body"]} {[w[0] for w in ze["wrote"]]}')
+    pre('simple-w', 'L.st.sec = 2', 'V'); t1, v1, _ = cut_(2.0); t2, v2, _ = cut_(0.5); t3, v3, _ = cut_(3.0)
+    ok(same_(t1, t2) and v1 == ['τ = 5.3 N/mm²'] and v2 == ['τ = 13.2 N/mm²'] and v3 == ['τ = 0.0 N/mm²'] and t3 and t3[2] < t1[2] - 20 and abs(t3[0] - t1[0]) <= 2 and abs(t3[1] - t1[1]) <= 2,
+       f'the same beam in the tab shear, cut at 2.00 m and at 0.50 m: the body of the shear stress has the same size, with 5.3 and 13.2 N/mm²; at 3.00 m, where the shear is zero, there is no body and the cut face stands in the same place: {t1} {t2} {t3} {v3}')
+    pg.mouse.move(5, 5); pg.click('#v3d'); pg.wait_for_timeout(300)
+    pre('simple-p', 'L.st.sec = 2', 'M')
     TAG = ''
     b.close()
     # a narrow sheet: no rotation labels on it, and the window of the section starts folded
@@ -1252,7 +1274,7 @@ with sync_playwright() as p:
 print('; '.join(errs) if errs else 'no script errors')
 r10, own = tagged.get('[review 10] ', [0, 0]), tagged.get('[not raised by the review] ', [0, 0])
 r11, v16, v17, v18 = tagged.get('[review 11] ', [0, 0]), tagged.get('[version 16] ', [0, 0]), tagged.get('[version 17] ', [0, 0]), tagged.get('[version 18] ', [0, 0])
-v19 = tagged.get('[version 19] ', [0, 0])
+v19, v20 = tagged.get('[version 19] ', [0, 0]), tagged.get('[version 20] ', [0, 0])
 print(f'checks added for review 10: {r10[0]}, of them failed: {r10[1]}')
 print(f'checks added with version 15 beside the review: {own[0]}, of them failed: {own[1]}')
 print(f'checks added for review 11: {r11[0]}, of them failed: {r11[1]}')
@@ -1260,5 +1282,6 @@ print(f'checks added for the functions of version 16: {v16[0]}, of them failed: 
 print(f'checks added for the functions of version 17: {v17[0]}, of them failed: {v17[1]}')
 print(f'checks added for the functions of version 18: {v18[0]}, of them failed: {v18[1]}')
 print(f'checks added for the functions of version 19: {v19[0]}, of them failed: {v19[1]}')
+print(f'checks added for the functions of version 20: {v20[0]}, of them failed: {v20[1]}')
 print(f'{done - len(bad)} of {done} checks of menus and states passed')
 sys.exit(1 if bad or errs else 0)
