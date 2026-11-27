@@ -2367,13 +2367,19 @@ const V3 = (() => {
     const box = []; for (const X_ of bx) for (const Y_ of by) for (const Z_ of [-bz, bz]) box.push([X_, Y_, Z_]);
     scene = { T: done(T), G: done(G), L: done(L), labels, c: [(bx[0] + bx[1]) / 2, (by[0] + by[1]) / 2, 0], box, size, mag, smax, tmax, ok, detail: null };
     /* The member cut open, seen near: the part before the cut, and on its cut face the body of the normal stress. Over
-       each part of the section stands a block as long as the stress at its fibres is large, tension in one colour and
-       compression in the other; the arrows say which way the stress acts on the face: away from it is tension. The
-       block of the largest stress of the structure is as long as its section is deep */
+       each part of the section stands a block, tension in one colour and compression in the other; the arrows say which
+       way the stress acts on the face: away from it is tension. The body shows how the stress is spread over the depth,
+       and it keeps one size: at every cut the larger of the two edge stresses is as long as the section is deep. So
+       along a member, and while a load changes, the body stands still and only its numbers change; where an axial force
+       acts, the share of tension and compression changes with it. A cut whose edge stresses both print 0.0 has no body */
     if (cutAt) {
       fresh();
-      const { c, sec, ms } = cutAt, lab2 = [], pts = [], back = clamp(2 * sec.H, 0.2, 0.8), x = c.x, from = Math.max(0, x - back), plain = () => steel;
-      const part = [at(ms.sta, from)].concat(ms.sta.filter(s => s.x > from + 1e-9 && s.x < x - 1e-9), [c]);
+      const { c: bent, sec, ms } = cutAt, lab2 = [], pts = [], back = clamp(2 * sec.H, 0.2, 0.8), x = bent.x, from = Math.max(0, x - back), plain = () => steel;
+      /* The part before the cut is drawn straight, along the member as it stands without load: so the view of the cut
+         is the same at every place of a member, whatever the bent shape does there */
+      const mb_ = m.members[cut.mi], na = nd[mb_.n1], nb = nd[mb_.n2], Lm_ = Math.hypot(nb.x - na.x, nb.y - na.y), e0 = [(nb.x - na.x) / Lm_, (nb.y - na.y) / Lm_, 0];
+      const c = { ...bent, t: e0, z: [e0[1], -e0[0], 0] };
+      const part = [{ ...c, p: sub(c.p, mul(e0, x - from)) }, c];
       /* the part before the cut; a cut at the very start of a member shows its face alone */
       /* in plain steel: here the colours belong to the body of the stress */
       if (x - from > 1e-6) { body(T, part, sec, plain, 1, true, true); edges(part, sec, edge, true); }
@@ -2383,8 +2389,9 @@ const V3 = (() => {
       if (key === 'V') {
         /* Tab shear: the body of the shear stress. It stands on the web and, low, on the flanges: as long at each fibre
            as τ is large there, largest at the middle of the web. The stress itself acts in the face, along the web: the
-           arrow beside the web shows which way. The body of the largest τ of the structure is as long as its section is deep */
-        const kt = tmax > 1e-9 ? 2 * sec.H / tmax : 0, tv = rgb(C.cV), col = [...tv, 0.42], ln = [...tv, 1], hw = sec.H - sec.tf, n = 16, tOf = u => Math.abs(tau(c.V, ms.sec, u)) * kt;
+           arrow beside the web shows which way. The body keeps one size: at every cut the stress at the middle of the web
+           is as long as the section is deep; a cut where it prints 0.0 has no body */
+        const tmid = Math.abs(tau(c.V, ms.sec, 0)), kt = n1(tmid) !== '0.0' ? 2 * sec.H / tmid : 0, tv = rgb(C.cV), col = [...tv, 0.42], ln = [...tv, 1], hw = sec.H - sec.tf, n = 16, tOf = u => Math.abs(tau(c.V, ms.sec, u)) * kt;
         const strip = (u0, u1, w, e0, e1) => {   /* a piece of the body between two fibres, with the lengths e0 and e1 */
           far = Math.max(far, e0, e1);
           for (const v of [-w, w]) pts.push(P(u0, v, 0), P(u1, v, 0), P(u0, v, e0), P(u1, v, e1));
@@ -2400,7 +2407,7 @@ const V3 = (() => {
         lab2.push({ p: P(0, 0, Math.abs(tm) * kt), t: `τ = ${n1(Math.abs(tm))} N/mm²`, font: `600 13px ${UI}`, col: C.cV, out: 'beside' });
         info = { mi: cut.mi, x, N: c.N, M: c.M, V: c.V, tau: tm, S: S0, t: t0, I: ms.sec.I, kind: 'tau', name: memName(cut.mi), sec: ms.sec.name };
       } else {
-        const sig = u => c.sN + c.kM * u, ks = smax > 1e-9 ? 2 * sec.H / smax : 0, parts = [];
+        const sig = u => c.sN + c.kM * u, edge = Math.max(Math.abs(sig(-sec.H)), Math.abs(sig(sec.H))), ks = n1(edge) !== '0.0' ? 2 * sec.H / edge : 0, parts = [];
         for (const [u0, u1, w] of sec.rects) {
           const s0 = sig(u0), s1 = sig(u1);
           if (s0 * s1 < 0) { const uz = u0 - s0 * (u1 - u0) / (s1 - s0); parts.push([u0, uz, w], [uz, u1, w]); } else parts.push([u0, u1, w]);
@@ -2434,9 +2441,11 @@ const V3 = (() => {
         }
         info = { mi: cut.mi, x, N: c.N, M: c.M, V: c.V, top, bot, sN: c.sN, sM: c.kM * sec.H, kind: 'sigma', name: memName(cut.mi), sec: ms.sec.name, A: ms.sec.A, W: sectionMore(ms.sec).W };
       }
-      const len = Math.min(back, x), box2 = [];
-      for (const s_ of [-len, far + 0.02]) for (const u of [-sec.H - 0.06, sec.H + 0.06]) for (const v of [-sec.B2 - 0.02, sec.B2 + 0.02]) box2.push(P(u, v, s_));
-      scene.detail = { T: done(T), G: done(G), L: done(L), labels: lab2, pts, c: add(c.p, mul(c.t, (far - len) / 2)), box: box2 };
+      /* the view of the cut keeps one framing along the whole member: room for the full part before the cut and for the
+         full body, also where the part is shorter (near the start of the member) or the body is missing (no stress) */
+      const reach = 2 * sec.H, box2 = [];
+      for (const s_ of [-back, reach + 0.02]) for (const u of [-sec.H - 0.06, sec.H + 0.06]) for (const v of [-sec.B2 - 0.02, sec.B2 + 0.02]) box2.push(P(u, v, s_));
+      scene.detail = { T: done(T), G: done(G), L: done(L), labels: lab2, pts, c: add(c.p, mul(c.t, (reach - back) / 2)), box: box2 };
     }
   }
 
@@ -2585,7 +2594,7 @@ const V3 = (() => {
       y += para(`Cut at x = ${n2(info.x)} m of ${info.name.replace('Member ', '')}, ${info.sec}: ${tv ? `V = ${n1(info.V)} kN` : `M = ${n1(info.M)} kNm, N = ${n1(info.N)} kN`}`, pad, y, `600 13px ${UI}`, C.ink, room - 110);
       y += para(tv ? `τ = V·S/(I·t) = ${n1(Math.abs(info.tau))} N/mm² at the middle of the web (S = ${n1(info.S)} cm³, t = ${n1(info.t)} mm)`
         : `σ = N/A ± M/W = ${n1(info.sN)} ± ${n1(Math.abs(info.sM))} N/mm² (A = ${n1(info.A)} cm², W = ${info.W >= 1000 ? Math.round(info.W) : n1(info.W)} cm³)`, pad, y + 2, `13px ${UI}`, C.ink, room - 110);
-      const fh = para(tv ? 'The body is the size of the shear stress; it acts along the web (arrow).' : 'The body is the normal stress; an arrow away from the face is tension.', pad, H3 - 13, `13px ${UI}`, C.mute, room, true);
+      const fh = para(tv ? 'Fixed size: the body shows how the shear stress is spread, the number how large it is. It acts along the web (arrow).' : 'Fixed size: the body shows how the stress is spread, the numbers how large it is. An arrow away from the face: tension.', pad, H3 - 13, `13px ${UI}`, C.mute, room, true);
       /* the cut member has the room between the head and the foot */
       const top = y - hs + 4, vp = [0, hs + top, W3, Math.max(60, hd - top - fh - 12)];
       const dist = away(d.c, d.box, dir, right, upv, fov, vp[2] / vp[3], 0.9) / cam.zd;
