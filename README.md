@@ -1,6 +1,6 @@
 # Statics Lab
 
-Version 19 · 27 November 2026
+Version 20 · 27 November 2026
 
 An interactive page for learning the statics of beams, frames and trusses in the plane.
 Change a load, a support, a length or a profile, and the reactions, the lines of N, V and M and the bent shape follow at once, together with the formulas that link them.
