@@ -1,0 +1,4 @@
+dist/debug.html
+__pycache__/
+node_modules/
+out/
