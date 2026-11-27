@@ -2,10 +2,12 @@
 
 Version 20 · 27 November 2026
 
+**Try it in the browser:** https://visionarxgmbh.github.io/statics-lab/
+
 An interactive page for learning the statics of beams, frames and trusses in the plane.
 Change a load, a support, a length or a profile, and the reactions, the lines of N, V and M and the bent shape follow at once, together with the formulas that link them.
 
-It is one HTML file. It needs no installation and no server, and it calls no other server: open `dist/index.html` in a browser.
+It is one HTML file. It needs no installation and no server, and it calls no other server. For your own copy, download `dist/index.html` and open it in a browser.
 
 ![The sheet of a simple beam with the relations under its lines](docs/sheet.png)
 

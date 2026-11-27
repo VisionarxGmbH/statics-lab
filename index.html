@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Statics Lab</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236741d9'/%3E%3Cpath d='M5 11h22' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M6 12Q16 31 26 12' fill='%23fff' fill-opacity='.28' stroke='%23fff' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E">
+<meta name="description" content="Interactive page for learning the statics of beams, frames and trusses: reactions, N, V, M, deflection, the relations between them, and a 3D view with stresses.">
+<style>
+/* The frame of the live page: the tool runs unchanged in the window above; the line below names who offers it. */
+:root{color-scheme:light dark;--panel:light-dark(#f2f4f6,#171c22);--mute:light-dark(#566170,#9aa4b2);--line:light-dark(#d9dde4,#2a323d)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;height:100dvh;background:var(--panel);overflow:hidden}
+iframe{flex:1 1 auto;min-height:0;width:100%;border:0;display:block}
+footer{flex:0 0 auto;display:flex;gap:16px;align-items:center;padding:5px 14px;border-top:1px solid var(--line);background:var(--panel);color:var(--mute);font:12px/1.3 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;white-space:nowrap}
+footer span{margin-right:auto;overflow:hidden;text-overflow:ellipsis}
+footer a{color:inherit;text-decoration:none}
+footer a:hover,footer a:focus-visible{text-decoration:underline}
+@media (max-width:560px){footer{gap:12px;padding:5px 10px}footer span{display:none}footer a:first-of-type{margin-left:auto}}
+</style>
+</head>
+<body>
+<iframe src="dist/index.html" title="Statics Lab" allow="fullscreen"></iframe>
+<footer><span>Statics Lab · Visionarx GmbH</span><a href="https://www.visionarx.com/imprint" target="_blank" rel="noopener">Impressum</a><a href="https://www.visionarx.com/privacy" target="_blank" rel="noopener">Privacy policy</a><a href="https://github.com/VisionarxGmbH/statics-lab" target="_blank" rel="noopener">Source and licence</a></footer>
+<script>
+/* the line below follows the light or dark sheet chosen in the tool */
+const frame = document.querySelector('iframe');
+const follow = () => {
+  try {
+    const root = frame.contentDocument.documentElement;
+    const copy = () => { if (root.dataset.theme) document.documentElement.dataset.theme = root.dataset.theme; else delete document.documentElement.dataset.theme; };
+    copy();
+    new MutationObserver(copy).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  } catch (e) { /* opened from a disk the frame cannot be read; the tool runs all the same */ }
+};
+frame.addEventListener('load', follow);
+</script>
+</body>
+</html>
